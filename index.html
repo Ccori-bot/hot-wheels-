@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feliz Día de los Carritos Hot Wheels - Bro Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: radial-gradient(circle, #0b1a2e 0%, #030811 100%);
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Pantalla de Carga */
+    #loader {
+      position: absolute;
+      z-index: 10;
+      text-align: center;
+      color: white;
+      cursor: pointer;
+    }
+    .speedometer {
+      width: 120px;
+      height: 120px;
+      border: 4px solid #00f2ff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 0 auto 15px;
+      box-shadow: 0 0 20px #00f2ff;
+    }
+
+    /* Tarjeta de Código CSS estilo Alex Dev */
+    .code-card {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 400px;
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 5;
+      color: #00f2ff;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    .code-header {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    /* Pop-up estilo Hot Wheels */
+    .card-popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 280px;
+      height: 400px;
+      background: linear-gradient(135deg, #d31027, #ea384d);
+      border: 4px solid #ffcc00;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 8;
+      cursor: pointer;
+    }
+    .card-popup.active { transform: translate(-50%, -50%) scale(1); }
+    .hw-logo { 
+      font-size: 1.8rem; 
+      color: #ffeb3b; 
+      text-shadow: 2px 2px #d31027; 
+      margin-bottom: 15px; 
+    }
+
+    #webgl-container { position: absolute; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+
+  <div id="loader" onclick="startApp()">
+    <div class="speedometer">100</div>
+    <p>Toca para arrancar el motor 🏎️🔥</p>
+  </div>
+
+  <div id="webgl-container"></div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+    </div>
+    <pre><code id="typewriter">.Hot_Wheels {
+  position: absolute;
+  width: 90%;
+  font-size: 2rem;
+  font-family: "Mejores Amigos";
+  height: var(--bro-code);
+  background: var(--lealtad);
+}</code></pre>
+  </div>
+
+  <div class="card-popup" id="popupCard" onclick="nextCard()">
+    <div class="hw-logo">HOT WHEELS 🤝</div>
+    <p id="cardText">Para el mejor compañero de rutas y aventuras.</p>
+  </div>
+
+  <script>
+    // Frases adaptadas para un amigo
+    const phrases = [
+      "Las flores se marchitan, ¡pero un buen Hot Wheels dura para siempre, bro! 🏎️",
+      "Gracias por estar siempre en las buenas y en las malas. 🤝",
+      "Un detalle para el mejor compañero de carreras y aventuras. 🔥",
+      "¡Para que le sumes un auto más a la colección! 🏁"
+    ];
+    let phraseIndex = 0;
+
+    function startApp() {
+      document.getElementById('loader').style.display = 'none';
+      showCard();
+      init3D();
+    }
+
+    function showCard() {
+      const card = document.getElementById('popupCard');
+      document.getElementById('cardText').innerText = phrases[phraseIndex];
+      card.classList.add('active');
+    }
+
+    function nextCard() {
+      const card = document.getElementById('popupCard');
+      card.classList.remove('active');
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+      setTimeout(() => {
+        showCard();
+      }, 3000);
+    }
+
+    // Universo 3D con Three.js
+    function init3D() {
+      const container = document.getElementById('webgl-container');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      // Partículas
+      const particlesGeo = new THREE.BufferGeometry();
+      const count = 1500;
+      const positions = new Float32Array(count * 3);
+      for(let i=0; i<count*3; i++) {
+        positions[i] = (Math.random() - 0.5) * 50;
+      }
+      particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const particlesMat = new THREE.PointsMaterial({ size: 0.08, color: 0x00f2ff });
+      const starField = new THREE.Points(particlesGeo, particlesMat);
+      scene.add(starField);
+
+      // Anillo de luz central
+      const ringGeo = new THREE.RingGeometry(1, 1.5, 32);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, side: THREE.DoubleSide });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      scene.add(ring);
+
+      camera.position.set(0, 8, 12);
+      camera.lookAt(0, 0, 0);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        starField.rotation.y += 0.002;
+        ring.rotation.z += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>
